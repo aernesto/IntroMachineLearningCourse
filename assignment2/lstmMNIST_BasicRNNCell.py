@@ -2,8 +2,8 @@
 # https://github.com/aymericdamien/TensorFlow-Examples/blob/master/examples/3_NeuralNetworks/recurrent_network.py
 import tensorflow as tf
 import os
-from tensorflow.python.ops import rnn, rnn_cell, rnn_cell_impl
-#from tensorflow.contrib import rnn  # copied from Damien Aymeric
+#from tensorflow.python.ops import rnn, rnn_cell, rnn_cell_impl
+from tensorflow.contrib import rnn  # copied from Damien Aymeric
 import numpy as np
 
 from tensorflow.examples.tutorials.mnist import input_data
@@ -39,7 +39,7 @@ def RNN(x, weights, biases):
     x = tf.unstack(x, nSteps, 1)
 
     # Define a lstm cell with tensorflow
-    lstm_cell = rnn_cell.BasicRNNCell(nHidden)
+    lstm_cell = rnn.BasicLSTMCell(nHidden, forget_bias=1.0)
 
     # Get lstm cell output
     outputs, states = rnn.static_rnn(lstm_cell, x, dtype=tf.float32)
