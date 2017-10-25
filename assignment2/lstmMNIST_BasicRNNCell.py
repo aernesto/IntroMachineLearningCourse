@@ -1,17 +1,19 @@
 # Most code inspired from
 # https://github.com/aymericdamien/TensorFlow-Examples/blob/master/examples/3_NeuralNetworks/recurrent_network.py
 import tensorflow as tf
+import os
 from tensorflow.python.ops import rnn, rnn_cell, rnn_cell_impl
 #from tensorflow.contrib import rnn  # copied from Damien Aymeric
 import numpy as np
 
 from tensorflow.examples.tutorials.mnist import input_data
 
+result_dir='results/LSTM/RNN/2/'
 # call mnist function
 mnist = input_data.read_data_sets('MNIST_data', one_hot=True)
 
 learningRate = 1e-4
-trainingIters = 10000
+trainingIters = 50000
 batchSize = 100
 displayStep = 20
 
@@ -56,10 +58,26 @@ optimizer = tf.train.AdamOptimizer(learning_rate=learningRate).minimize(cost)
 correctPred = tf.equal(tf.argmax(pred, 1), tf.argmax(y, 1))
 accuracy = tf.reduce_mean(tf.cast(correctPred, tf.float32))
 
-init = tf.global_variables_initializer()
+# Add a scalar summary for the snapshot loss.
+tf.summary.scalar(cost.op.name, cost)
+tf.summary.scalar('accuracy', accuracy)  # to plot train accuracy
+
+# Build the summary operation based on the TF collection of Summaries.
+summary_op = tf.summary.merge_all()
+
+# Add the variable initializer Op.
+init = tf.global_variables_initializer()  # sess.run()?
+
+# Create a saver for writing training checkpoints.
+saver = tf.train.Saver()
+
+
+
 
 with tf.Session() as sess:
     sess.run(init)
+    # Instantiate a SummaryWriter to output summaries and the Graph.
+    summary_writer = tf.summary.FileWriter(result_dir, sess.graph)
     step = 1
 
     while (step * batchSize) < trainingIters:
@@ -76,6 +94,13 @@ with tf.Session() as sess:
                   ", Minibatch Loss= " +
                   "{:.6f}".format(loss) + ", Training Accuracy= " +
                   "{:.5f}".format(acc))
+            # Update the events file which is used to monitor the training (in this case,
+            # only the training loss is monitored)
+            summary_str = sess.run(summary_op, feed_dict={x: batchX, y: batchY})
+            summary_writer.add_summary(summary_str, step*batchSize)
+            summary_writer.flush()
+            checkpoint_file = os.path.join(result_dir, 'checkpoint')
+            saver.save(sess, checkpoint_file, global_step=step*batchSize)
         step += 1
     print('Optimization finished')
 
